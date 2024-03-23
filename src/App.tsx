@@ -1,12 +1,64 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const HOUR_IN_SECONDS = 60 * 60;
 
 function App() {
-  const [remainingSeconds, setRemainingSeconds] = useState(3600);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
   const intervalIdRef = useRef<number>();
+  const isDraggingRef = useRef(false);
+  const clockElementRef = useRef<HTMLDivElement>(null);
 
   const remainingTimeRatio = remainingSeconds / HOUR_IN_SECONDS;
+
+  useEffect(() => {
+    function handleMouseMove(event: MouseEvent) {
+      if (isDraggingRef.current) {
+        const clockElement = clockElementRef.current;
+        if (!clockElement) {
+          throw new Error("");
+        }
+        const rect = clockElement.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        const angleInRadians = Math.atan2(
+          centerY - event.clientY,
+          event.clientX - centerX
+        );
+        const angleInDegrees =
+          (((angleInRadians + (Math.PI * 3) / 2) * 180) / Math.PI + 360) % 360;
+
+        const nextRemainingSeconds = Math.round((3600 * angleInDegrees) / 360);
+        if (typeof intervalIdRef.current === "number") {
+          clearInterval(intervalIdRef.current);
+        }
+
+        intervalIdRef.current = setInterval(() => {
+          setRemainingSeconds((prevRemainingSeconds) => {
+            const nextRemainMinutes = prevRemainingSeconds - 1;
+
+            if (nextRemainMinutes === 0) {
+              clearInterval(intervalIdRef.current);
+            }
+
+            return nextRemainMinutes;
+          });
+        }, 1000);
+
+        setRemainingSeconds(nextRemainingSeconds);
+      }
+    }
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    function handleMouseUp() {
+      isDraggingRef.current = false;
+    }
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => window.removeEventListener("mouseup", handleMouseUp);
+  }, []);
 
   return (
     <div
@@ -16,35 +68,9 @@ function App() {
         placeItems: "center",
       }}
     >
-      <input
-        placeholder="minutes"
-        value={remainingSeconds}
-        onChange={(event) => {
-          const nextRemainingSeconds = Number(event.target.value);
-
-          if (nextRemainingSeconds > 0) {
-            if (typeof intervalIdRef.current === "number") {
-              clearInterval(intervalIdRef.current);
-            }
-
-            intervalIdRef.current = setInterval(() => {
-              setRemainingSeconds((prevRemainingSeconds) => {
-                const nextRemainMinutes = prevRemainingSeconds - 1;
-
-                if (nextRemainMinutes === 0) {
-                  clearInterval(intervalIdRef.current);
-                }
-
-                return nextRemainMinutes;
-              });
-            }, 1000);
-          }
-
-          setRemainingSeconds(nextRemainingSeconds);
-        }}
-      />
       <div
         className="relative grid place-items-center"
+        ref={clockElementRef}
         style={{
           width: "400px",
           height: "400px",
@@ -70,7 +96,7 @@ function App() {
             );
           })}
         <div
-          className="bg-white z-10"
+          className="bg-white"
           style={{
             width: "calc(100% - 14px)",
             height: "calc(100% - 14px)",
@@ -96,6 +122,18 @@ function App() {
               }deg)`,
             }}
           ></div>
+          <button
+            className="absolute top-1/2 left-1/2 h-10 z-30 cursor-pointer"
+            type="button"
+            style={{
+              width: "500%",
+              transformOrigin: "left center",
+              transform: `translateY(-50%) scaleX(-1) rotate(${
+                270 + remainingTimeRatio * 360
+              }deg)`,
+            }}
+            onMouseDown={() => (isDraggingRef.current = true)}
+          ></button>
         </div>
 
         <div
@@ -131,7 +169,7 @@ function App() {
             return (
               <div
                 key={i}
-                className="absolute z-20 flex justify-end items-center"
+                className="absolute flex justify-end items-center"
                 style={{
                   transform: `rotate(${270 + 30 * i}deg) translateX(50%)`,
                   top: `calc(50% - ${height}px / 2)`,
@@ -140,7 +178,7 @@ function App() {
                 }}
               >
                 <span
-                  className="text-2xl font-semibold tracking-tight"
+                  className="text-2xl font-semibold tracking-tight select-none"
                   style={{
                     transform: `rotate(-${270 + 30 * i}deg)`,
                   }}
