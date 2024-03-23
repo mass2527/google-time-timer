@@ -3,8 +3,10 @@ import { useRef, useState } from "react";
 const HOUR_IN_SECONDS = 60 * 60;
 
 function App() {
-  const [remainSeconds, setRemainSeconds] = useState(3600);
+  const [remainingSeconds, setRemainingSeconds] = useState(3600);
   const intervalIdRef = useRef<number>();
+
+  const remainingTimeRatio = remainingSeconds / HOUR_IN_SECONDS;
 
   return (
     <div
@@ -16,18 +18,18 @@ function App() {
     >
       <input
         placeholder="minutes"
-        value={remainSeconds}
+        value={remainingSeconds}
         onChange={(event) => {
-          const nextRemainSeconds = Number(event.target.value);
+          const nextRemainingSeconds = Number(event.target.value);
 
-          if (nextRemainSeconds > 0) {
+          if (nextRemainingSeconds > 0) {
             if (typeof intervalIdRef.current === "number") {
               clearInterval(intervalIdRef.current);
             }
 
             intervalIdRef.current = setInterval(() => {
-              setRemainSeconds((prevRemainSeconds) => {
-                const nextRemainMinutes = prevRemainSeconds - 1;
+              setRemainingSeconds((prevRemainingSeconds) => {
+                const nextRemainMinutes = prevRemainingSeconds - 1;
 
                 if (nextRemainMinutes === 0) {
                   clearInterval(intervalIdRef.current);
@@ -38,7 +40,7 @@ function App() {
             }, 1000);
           }
 
-          setRemainSeconds(nextRemainSeconds);
+          setRemainingSeconds(nextRemainingSeconds);
         }}
       />
       <div
@@ -77,6 +79,26 @@ function App() {
         ></div>
 
         <div
+          className="bg-black z-20 absolute"
+          style={{
+            width: "10%",
+            height: "10%",
+            borderRadius: "50%",
+          }}
+        >
+          <div
+            className="absolute top-1/2 left-1/2 bg-black h-2 rounded-md"
+            style={{
+              width: "150%",
+              transformOrigin: "left center",
+              transform: `translateY(-50%) scaleX(-1) rotate(${
+                270 + remainingTimeRatio * 360
+              }deg)`,
+            }}
+          ></div>
+        </div>
+
+        <div
           className="z-10 absolute"
           style={{
             width: "calc(100% - 14px)",
@@ -86,16 +108,17 @@ function App() {
             transform: "scaleX(-1)",
 
             backgroundImage:
-              remainSeconds <= HOUR_IN_SECONDS / 2
+              remainingSeconds <= HOUR_IN_SECONDS / 2
                 ? `linear-gradient(${
-                    90 + 360 * (remainSeconds / HOUR_IN_SECONDS)
+                    90 + 360 * remainingTimeRatio
                   }deg, transparent 50%, white 50%),
             linear-gradient(90deg, white 50%, transparent 50%)
             `
                 : `linear-gradient(${
                     90 +
                     360 *
-                      ((remainSeconds - HOUR_IN_SECONDS / 2) / HOUR_IN_SECONDS)
+                      ((remainingSeconds - HOUR_IN_SECONDS / 2) /
+                        HOUR_IN_SECONDS)
                   }deg, transparent 50%, #e31936 50%),
                 linear-gradient(90deg, white 50%, transparent 50%)`,
           }}
