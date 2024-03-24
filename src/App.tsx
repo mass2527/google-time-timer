@@ -1,13 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import CountDownTimer from "./CountDownTimer";
+import SpeakerLoudIcon from "./SpeakerLoudIcon";
+import SpeakerOffIcon from "./SpeakerOffIcon";
 
 function App() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const intervalIdRef = useRef<number>();
   const isChangingTimerDurationRef = useRef(false);
   const prevAngleInDegrees = useRef<number>();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioRef] = useState(() => ({
+    current: new Audio("/default-alarm.mp3"),
+  }));
   const svgElementRef = useRef<SVGSVGElement>(null);
+  const [isSpeakerOn, setIsSpeakerOf] = useState(true);
+
+  useEffect(() => {
+    const audioElement = audioRef.current;
+    audioElement.volume = isSpeakerOn ? 1 : 0;
+  }, [isSpeakerOn, audioRef]);
 
   useEffect(() => {
     function changeTimerDuration(event: MouseEvent | TouchEvent) {
@@ -47,9 +57,6 @@ function App() {
             const nextRemainMinutes = prevRemainingSeconds - 1;
 
             if (nextRemainMinutes === 0) {
-              if (!audioRef.current) {
-                audioRef.current = new Audio("/default-alarm.mp3");
-              }
               audioRef.current.play();
 
               clearInterval(intervalIdRef.current);
@@ -94,7 +101,7 @@ function App() {
       window.removeEventListener("mousemove", changeTimerDuration);
       window.removeEventListener("mousemove", changeTimerDuration);
     };
-  }, []);
+  }, [isSpeakerOn, audioRef]);
 
   useEffect(() => {
     function endChangingTimerDuration() {
@@ -110,12 +117,28 @@ function App() {
 
   return (
     <div className="min-h-screen grid place-items-center bg-[#E9ECF3]">
-      <CountDownTimer
-        ref={svgElementRef}
-        remainingSeconds={remainingSeconds}
-        onMouseDown={() => (isChangingTimerDurationRef.current = true)}
-        onTouchStart={() => (isChangingTimerDurationRef.current = true)}
-      />
+      <div className="flex flex-col items-center gap-10">
+        <CountDownTimer
+          ref={svgElementRef}
+          remainingSeconds={remainingSeconds}
+          onMouseDown={() => (isChangingTimerDurationRef.current = true)}
+          onTouchStart={() => (isChangingTimerDurationRef.current = true)}
+        />
+
+        <button
+          type="button"
+          onClick={() => setIsSpeakerOf((prevIsSpeakerOn) => !prevIsSpeakerOn)}
+          aria-label={
+            isSpeakerOn ? "Turn off the speaker" : "Turn on the speaker"
+          }
+        >
+          {isSpeakerOn ? (
+            <SpeakerLoudIcon className="size-8" />
+          ) : (
+            <SpeakerOffIcon className="size-8" />
+          )}
+        </button>
+      </div>
     </div>
   );
 }
