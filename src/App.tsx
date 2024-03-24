@@ -106,21 +106,10 @@ function App() {
   }, []);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-      }}
-    >
+    <div className="min-h-screen grid place-items-center">
       <div
-        className="relative grid place-items-center"
+        className="relative grid place-items-center rounded-full w-[345px] h-[345px]"
         ref={clockElementRef}
-        style={{
-          width: "345px",
-          height: "345px",
-          borderRadius: "50%",
-        }}
       >
         {Array(30)
           .fill(null)
@@ -140,27 +129,18 @@ function App() {
               ></div>
             );
           })}
-        <div
-          className="bg-white"
+        {/* <div
+          className="bg-white rounded-full"
           style={{
             width: "calc(100% - 14px)",
             height: "calc(100% - 14px)",
-            borderRadius: "50%",
           }}
-        ></div>
+        ></div> */}
 
-        <div
-          className="bg-black z-20 absolute"
-          style={{
-            width: "10%",
-            height: "10%",
-            borderRadius: "50%",
-          }}
-        >
+        <div className="bg-black z-20 absolute rounded-full w-[10%] h-[10%]">
           <div
-            className="absolute top-1/2 left-1/2 bg-black h-2 rounded-md"
+            className="absolute top-1/2 left-1/2 bg-black h-2 rounded-md w-full"
             style={{
-              width: "100%",
               transformOrigin: "left center",
               transform: `translateY(-50%) scaleX(-1) rotate(${
                 270 + remainingTimeRatio * 360
@@ -168,10 +148,9 @@ function App() {
             }}
           ></div>
           <button
-            className="absolute top-1/2 left-1/2 h-10 z-30 cursor-pointer"
+            className="absolute top-1/2 left-1/2 h-10 z-30 cursor-pointer w-[500%]"
             type="button"
             style={{
-              width: "500%",
               transformOrigin: "left center",
               transform: `translateY(-50%) scaleX(-1) rotate(${
                 270 + remainingTimeRatio * 360
@@ -183,13 +162,11 @@ function App() {
         </div>
 
         <div
-          className="z-10 absolute"
+          className="z-10 absolute rounded-full -scale-x-100"
           style={{
             width: "calc(100% - 14px)",
             height: "calc(100% - 14px)",
-            borderRadius: "50%",
             backgroundColor: "#e31936",
-            transform: "scaleX(-1)",
 
             backgroundImage:
               remainingSeconds <= HOUR_IN_SECONDS / 2
