@@ -8,6 +8,7 @@ function App() {
   const isRotatingRef = useRef(false);
   const clockElementRef = useRef<HTMLDivElement>(null);
   const prevAngleInDegrees = useRef<number>();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const remainingTimeRatio = remainingSeconds / HOUR_IN_SECONDS;
 
@@ -49,6 +50,11 @@ function App() {
             const nextRemainMinutes = prevRemainingSeconds - 1;
 
             if (nextRemainMinutes === 0) {
+              if (!audioRef.current) {
+                audioRef.current = new Audio("/default-alarm.mp3");
+              }
+              audioRef.current.play();
+
               clearInterval(intervalIdRef.current);
             }
 
