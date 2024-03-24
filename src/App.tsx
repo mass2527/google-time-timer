@@ -12,18 +12,24 @@ function App() {
   const remainingTimeRatio = remainingSeconds / HOUR_IN_SECONDS;
 
   useEffect(() => {
-    function handleMouseMove(event: MouseEvent) {
+    function handleDragging(event: MouseEvent | TouchEvent) {
       if (isDraggingRef.current) {
         const clockElement = clockElementRef.current;
         if (!clockElement) {
-          throw new Error("");
+          throw new Error(
+            "Please check if clockElementRef is correctly attached to the dom"
+          );
         }
+
+        const coords =
+          event instanceof TouchEvent
+            ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
+            : { x: event.clientX, y: event.clientY };
         const rect = clockElement.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-
-        const x = event.clientX - centerX;
-        const y = centerY - event.clientY;
+        const x = coords.x - centerX;
+        const y = centerY - coords.y;
         // To set the positive y-axis as 0 degrees, I subtracted π / 2.
         const angleInRadians = Math.atan2(y, x) - Math.PI / 2;
 
@@ -79,16 +85,24 @@ function App() {
         setRemainingSeconds(nextRemainingSeconds);
       }
     }
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleDragging);
+    window.addEventListener("touchmove", handleDragging);
+    return () => {
+      window.removeEventListener("mousemove", handleDragging);
+      window.removeEventListener("mousemove", handleDragging);
+    };
   }, []);
 
   useEffect(() => {
-    function handleMouseUp() {
+    function endDragging() {
       isDraggingRef.current = false;
     }
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => window.removeEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mouseup", endDragging);
+    window.addEventListener("touchend", endDragging);
+    return () => {
+      window.removeEventListener("mouseup", endDragging);
+      window.removeEventListener("touchend", endDragging);
+    };
   }, []);
 
   return (
@@ -164,6 +178,7 @@ function App() {
               }deg)`,
             }}
             onMouseDown={() => (isDraggingRef.current = true)}
+            onTouchStart={() => (isDraggingRef.current = true)}
           ></button>
         </div>
 
