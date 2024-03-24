@@ -99,7 +99,7 @@ function App() {
     window.addEventListener("touchmove", changeTimerDuration);
     return () => {
       window.removeEventListener("mousemove", changeTimerDuration);
-      window.removeEventListener("mousemove", changeTimerDuration);
+      window.removeEventListener("touchmove", changeTimerDuration);
     };
   }, [isSpeakerOn, audioRef]);
 
@@ -122,10 +122,7 @@ function App() {
           ref={svgElementRef}
           remainingSeconds={remainingSeconds}
           onMouseDown={() => (isChangingTimerDurationRef.current = true)}
-          onTouchStart={(event) => {
-            event.preventDefault();
-            isChangingTimerDurationRef.current = true;
-          }}
+          onTouchStart={() => (isChangingTimerDurationRef.current = true)}
         />
 
         <button
