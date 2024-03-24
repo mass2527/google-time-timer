@@ -122,7 +122,10 @@ function App() {
           ref={svgElementRef}
           remainingSeconds={remainingSeconds}
           onMouseDown={() => (isChangingTimerDurationRef.current = true)}
-          onTouchStart={() => (isChangingTimerDurationRef.current = true)}
+          onTouchStart={(event) => {
+            event.preventDefault();
+            isChangingTimerDurationRef.current = true;
+          }}
         />
 
         <button
