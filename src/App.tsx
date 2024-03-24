@@ -5,15 +5,15 @@ const HOUR_IN_SECONDS = 60 * 60;
 function App() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const intervalIdRef = useRef<number>();
-  const isDraggingRef = useRef(false);
+  const isRotatingRef = useRef(false);
   const clockElementRef = useRef<HTMLDivElement>(null);
   const prevAngleInDegrees = useRef<number>();
 
   const remainingTimeRatio = remainingSeconds / HOUR_IN_SECONDS;
 
   useEffect(() => {
-    function handleDragging(event: MouseEvent | TouchEvent) {
-      if (isDraggingRef.current) {
+    function rotateTimer(event: MouseEvent | TouchEvent) {
+      if (isRotatingRef.current) {
         const clockElement = clockElementRef.current;
         if (!clockElement) {
           throw new Error(
@@ -64,7 +64,7 @@ function App() {
           angleInDegrees > -90
         ) {
           setRemainingSeconds(0);
-          isDraggingRef.current = false;
+          isRotatingRef.current = false;
           clearInterval(intervalIdRef.current);
           return;
         }
@@ -77,7 +77,7 @@ function App() {
           angleInDegrees < 90
         ) {
           setRemainingSeconds(3600);
-          isDraggingRef.current = false;
+          isRotatingRef.current = false;
           return;
         }
 
@@ -85,23 +85,23 @@ function App() {
         setRemainingSeconds(nextRemainingSeconds);
       }
     }
-    window.addEventListener("mousemove", handleDragging);
-    window.addEventListener("touchmove", handleDragging);
+    window.addEventListener("mousemove", rotateTimer);
+    window.addEventListener("touchmove", rotateTimer);
     return () => {
-      window.removeEventListener("mousemove", handleDragging);
-      window.removeEventListener("mousemove", handleDragging);
+      window.removeEventListener("mousemove", rotateTimer);
+      window.removeEventListener("mousemove", rotateTimer);
     };
   }, []);
 
   useEffect(() => {
-    function endDragging() {
-      isDraggingRef.current = false;
+    function endRotateTimer() {
+      isRotatingRef.current = false;
     }
-    window.addEventListener("mouseup", endDragging);
-    window.addEventListener("touchend", endDragging);
+    window.addEventListener("mouseup", endRotateTimer);
+    window.addEventListener("touchend", endRotateTimer);
     return () => {
-      window.removeEventListener("mouseup", endDragging);
-      window.removeEventListener("touchend", endDragging);
+      window.removeEventListener("mouseup", endRotateTimer);
+      window.removeEventListener("touchend", endRotateTimer);
     };
   }, []);
 
@@ -177,8 +177,8 @@ function App() {
                 270 + remainingTimeRatio * 360
               }deg)`,
             }}
-            onMouseDown={() => (isDraggingRef.current = true)}
-            onTouchStart={() => (isDraggingRef.current = true)}
+            onMouseDown={() => (isRotatingRef.current = true)}
+            onTouchStart={() => (isRotatingRef.current = true)}
           ></button>
         </div>
 
