@@ -7,6 +7,7 @@ function App() {
   const intervalIdRef = useRef<number>();
   const isDraggingRef = useRef(false);
   const clockElementRef = useRef<HTMLDivElement>(null);
+  const prevAngleInDegrees = useRef<number>();
 
   const remainingTimeRatio = remainingSeconds / HOUR_IN_SECONDS;
 
@@ -21,14 +22,18 @@ function App() {
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
 
-        const angleInRadians = Math.atan2(
-          centerY - event.clientY,
-          event.clientX - centerX
-        );
-        const angleInDegrees =
-          (((angleInRadians + (Math.PI * 3) / 2) * 180) / Math.PI + 360) % 360;
+        const x = event.clientX - centerX;
+        const y = centerY - event.clientY;
+        // To set the positive y-axis as 0 degrees, I subtracted π / 2.
+        const angleInRadians = Math.atan2(y, x) - Math.PI / 2;
 
-        const nextRemainingSeconds = Math.round((3600 * angleInDegrees) / 360);
+        const angleInDegrees = (angleInRadians * 180) / Math.PI;
+        const normalizedAngleInDegrees =
+          angleInDegrees >= 0 ? angleInDegrees : angleInDegrees + 360;
+
+        const nextRemainingSeconds = Math.round(
+          3600 * (normalizedAngleInDegrees / 360)
+        );
         if (typeof intervalIdRef.current === "number") {
           clearInterval(intervalIdRef.current);
         }
@@ -45,6 +50,32 @@ function App() {
           });
         }, 1000);
 
+        if (
+          typeof prevAngleInDegrees.current !== "undefined" &&
+          prevAngleInDegrees.current >= 0 &&
+          prevAngleInDegrees.current < 90 &&
+          angleInDegrees < 0 &&
+          angleInDegrees > -90
+        ) {
+          setRemainingSeconds(0);
+          isDraggingRef.current = false;
+          clearInterval(intervalIdRef.current);
+          return;
+        }
+
+        if (
+          typeof prevAngleInDegrees.current !== "undefined" &&
+          prevAngleInDegrees.current < 0 &&
+          prevAngleInDegrees.current > -90 &&
+          angleInDegrees >= 0 &&
+          angleInDegrees < 90
+        ) {
+          setRemainingSeconds(3600);
+          isDraggingRef.current = false;
+          return;
+        }
+
+        prevAngleInDegrees.current = angleInDegrees;
         setRemainingSeconds(nextRemainingSeconds);
       }
     }
@@ -72,8 +103,8 @@ function App() {
         className="relative grid place-items-center"
         ref={clockElementRef}
         style={{
-          width: "400px",
-          height: "400px",
+          width: "345px",
+          height: "345px",
           borderRadius: "50%",
         }}
       >
@@ -115,7 +146,7 @@ function App() {
           <div
             className="absolute top-1/2 left-1/2 bg-black h-2 rounded-md"
             style={{
-              width: "150%",
+              width: "100%",
               transformOrigin: "left center",
               transform: `translateY(-50%) scaleX(-1) rotate(${
                 270 + remainingTimeRatio * 360
