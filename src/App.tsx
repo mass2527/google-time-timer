@@ -142,7 +142,7 @@ function App() {
           onTouchStart={() => (isChangingTimerDurationRef.current = true)}
         />
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-4 items-center">
           <button
             type="button"
             onClick={() =>
@@ -181,7 +181,7 @@ function App() {
             style={{
               opacity: remainingSeconds === 0 ? 0 : 1,
             }}
-            disabled={remainingSeconds == 0}
+            className={`${remainingSeconds === 0 ? "invisible" : ""}`}
           >
             {isTimerActive ? "Pause" : "Resume"}
           </button>
