@@ -5,7 +5,7 @@ import SpeakerOffIcon from "./SpeakerOffIcon";
 
 function App() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
-  const intervalIdRef = useRef<number>();
+  const requestIdRef = useRef(-1);
   const isChangingTimerDurationRef = useRef(false);
   const prevAngleInDegrees = useRef<number>();
   const [audioRef] = useState(() => ({
@@ -13,6 +13,8 @@ function App() {
   }));
   const svgElementRef = useRef<SVGSVGElement>(null);
   const [isSpeakerOn, setIsSpeakerOf] = useState(true);
+  const startTimeStampRef = useRef(-1);
+  const startRemainingSecondsRef = useRef(-1);
 
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -20,6 +22,26 @@ function App() {
   }, [isSpeakerOn, audioRef]);
 
   useEffect(() => {
+    function updateTime(timestamp: number) {
+      if (startTimeStampRef.current === -1) {
+        startTimeStampRef.current = timestamp;
+      }
+
+      const elapsedSeconds = (timestamp - startTimeStampRef.current) / 1000;
+      const nextRemainMinutes =
+        startRemainingSecondsRef.current - elapsedSeconds;
+      if (nextRemainMinutes < 0) {
+        audioRef.current.play();
+        cancelAnimationFrame(requestIdRef.current);
+        startTimeStampRef.current = -1;
+        setRemainingSeconds(0);
+        return;
+      }
+
+      setRemainingSeconds(nextRemainMinutes);
+      requestIdRef.current = requestAnimationFrame(updateTime);
+    }
+
     function changeTimerDuration(event: MouseEvent | TouchEvent) {
       if (isChangingTimerDurationRef.current) {
         const svgElement = svgElementRef.current;
@@ -48,23 +70,11 @@ function App() {
         const nextRemainingSeconds = Math.round(
           3600 * (normalizedAngleInDegrees / 360)
         );
-        if (typeof intervalIdRef.current === "number") {
-          clearInterval(intervalIdRef.current);
+        if (requestIdRef.current !== -1) {
+          cancelAnimationFrame(requestIdRef.current);
         }
 
-        intervalIdRef.current = setInterval(() => {
-          setRemainingSeconds((prevRemainingSeconds) => {
-            const nextRemainMinutes = prevRemainingSeconds - 1;
-
-            if (nextRemainMinutes === 0) {
-              audioRef.current.play();
-
-              clearInterval(intervalIdRef.current);
-            }
-
-            return nextRemainMinutes;
-          });
-        }, 1000);
+        requestIdRef.current = requestAnimationFrame(updateTime);
 
         if (
           typeof prevAngleInDegrees.current !== "undefined" &&
@@ -74,8 +84,9 @@ function App() {
           angleInDegrees > -90
         ) {
           setRemainingSeconds(0);
+          startRemainingSecondsRef.current = -1;
           isChangingTimerDurationRef.current = false;
-          clearInterval(intervalIdRef.current);
+          cancelAnimationFrame(requestIdRef.current);
           return;
         }
 
@@ -87,12 +98,15 @@ function App() {
           angleInDegrees < 90
         ) {
           setRemainingSeconds(3600);
+          startRemainingSecondsRef.current = -1;
           isChangingTimerDurationRef.current = false;
+          cancelAnimationFrame(requestIdRef.current);
           return;
         }
 
         prevAngleInDegrees.current = angleInDegrees;
         setRemainingSeconds(nextRemainingSeconds);
+        startRemainingSecondsRef.current = nextRemainingSeconds;
       }
     }
     window.addEventListener("mousemove", changeTimerDuration);
