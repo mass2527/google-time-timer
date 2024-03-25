@@ -104,9 +104,8 @@ function App() {
           angleInDegrees < 90
         ) {
           setRemainingSeconds(3600);
-          startRemainingSecondsRef.current = -1;
+          startRemainingSecondsRef.current = 3600;
           isChangingTimerDurationRef.current = false;
-          cancelAnimationFrame(requestIdRef.current);
           return;
         }
 
