@@ -153,12 +153,11 @@ function App() {
             aria-label={
               isSpeakerActive ? "Turn off the speaker" : "Turn on the speaker"
             }
-            className="border-black border rounded-full size-10 grid place-items-center"
           >
             {isSpeakerActive ? (
-              <SpeakerLoudIcon className="size-4" />
+              <SpeakerLoudIcon className="size-6" />
             ) : (
-              <SpeakerOffIcon className="size-4" />
+              <SpeakerOffIcon className="size-6" />
             )}
           </button>
 
@@ -169,19 +168,18 @@ function App() {
                   cancelAnimationFrame(requestIdRef.current);
                   startTimeStampRef.current = -1;
                   startRemainingSecondsRef.current = remainingSeconds;
-                  setIsTimerActive(true);
+                  setIsTimerActive(false);
                 } else {
                   requestIdRef.current = requestAnimationFrame(updateTime);
-                  setIsTimerActive(false);
+                  setIsTimerActive(true);
                 }
               }}
               type="button"
-              className="border-black border rounded-full size-10 grid place-items-center"
             >
               {isTimerActive ? (
-                <PauseIcon className="size-4" />
+                <PauseIcon className="size-6" />
               ) : (
-                <PlayIcon className="size-4" />
+                <PlayIcon className="size-6" />
               )}
             </button>
           )}
