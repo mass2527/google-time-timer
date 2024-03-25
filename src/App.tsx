@@ -2,8 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import CountDownTimer from "./CountDownTimer";
 import SpeakerLoudIcon from "./SpeakerLoudIcon";
 import SpeakerOffIcon from "./SpeakerOffIcon";
-import PlayIcon from "./PlayIcon";
-import PauseIcon from "./PauseIcon";
 
 function App() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
@@ -161,28 +159,32 @@ function App() {
             )}
           </button>
 
-          {remainingSeconds !== 0 && (
-            <button
-              onClick={() => {
-                if (isTimerActive) {
-                  cancelAnimationFrame(requestIdRef.current);
-                  startTimeStampRef.current = -1;
-                  startRemainingSecondsRef.current = remainingSeconds;
-                  setIsTimerActive(false);
-                } else {
-                  requestIdRef.current = requestAnimationFrame(updateTime);
-                  setIsTimerActive(true);
-                }
-              }}
-              type="button"
-            >
-              {isTimerActive ? (
-                <PauseIcon className="size-6" />
-              ) : (
-                <PlayIcon className="size-6" />
-              )}
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (isTimerActive) {
+                cancelAnimationFrame(requestIdRef.current);
+                startTimeStampRef.current = -1;
+                startRemainingSecondsRef.current = remainingSeconds;
+                setIsTimerActive(false);
+                alert(
+                  "Timer Paused: The countdown has been paused. Click 'Resume' to continue."
+                );
+              } else {
+                requestIdRef.current = requestAnimationFrame(updateTime);
+                setIsTimerActive(true);
+                alert(
+                  "Timer Resumed: The countdown has been resumed. Time is ticking!"
+                );
+              }
+            }}
+            type="button"
+            style={{
+              opacity: remainingSeconds === 0 ? 0 : 1,
+            }}
+            disabled={remainingSeconds == 0}
+          >
+            {isTimerActive ? "Pause" : "Resume"}
+          </button>
         </div>
       </div>
     </div>
