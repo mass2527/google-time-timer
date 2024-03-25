@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import CountDownTimer from "./CountDownTimer";
 import SpeakerLoudIcon from "./SpeakerLoudIcon";
 import SpeakerOffIcon from "./SpeakerOffIcon";
+import PlayIcon from "./PlayIcon";
+import PauseIcon from "./PauseIcon";
 
 function App() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
@@ -15,14 +17,15 @@ function App() {
   const [isSpeakerOn, setIsSpeakerOf] = useState(true);
   const startTimeStampRef = useRef(-1);
   const startRemainingSecondsRef = useRef(-1);
+  const [isTimerPaused, setIsTimerPaused] = useState(false);
 
   useEffect(() => {
     const audioElement = audioRef.current;
     audioElement.volume = isSpeakerOn ? 1 : 0;
   }, [isSpeakerOn, audioRef]);
 
-  useEffect(() => {
-    function updateTime(timestamp: number) {
+  const updateTime = useCallback(
+    (timestamp: number) => {
       if (startTimeStampRef.current === -1) {
         startTimeStampRef.current = timestamp;
       }
@@ -30,7 +33,7 @@ function App() {
       const elapsedSeconds = (timestamp - startTimeStampRef.current) / 1000;
       const nextRemainMinutes =
         startRemainingSecondsRef.current - elapsedSeconds;
-      if (nextRemainMinutes < 0) {
+      if (nextRemainMinutes <= 0) {
         audioRef.current.play();
         cancelAnimationFrame(requestIdRef.current);
         startTimeStampRef.current = -1;
@@ -40,8 +43,11 @@ function App() {
 
       setRemainingSeconds(nextRemainMinutes);
       requestIdRef.current = requestAnimationFrame(updateTime);
-    }
+    },
+    [audioRef]
+  );
 
+  useEffect(() => {
     function changeTimerDuration(event: MouseEvent | TouchEvent) {
       if (isChangingTimerDurationRef.current) {
         const svgElement = svgElementRef.current;
@@ -115,7 +121,7 @@ function App() {
       window.removeEventListener("mousemove", changeTimerDuration);
       window.removeEventListener("touchmove", changeTimerDuration);
     };
-  }, [isSpeakerOn, audioRef]);
+  }, [isSpeakerOn, audioRef, updateTime]);
 
   useEffect(() => {
     function endChangingTimerDuration() {
@@ -139,19 +145,48 @@ function App() {
           onTouchStart={() => (isChangingTimerDurationRef.current = true)}
         />
 
-        <button
-          type="button"
-          onClick={() => setIsSpeakerOf((prevIsSpeakerOn) => !prevIsSpeakerOn)}
-          aria-label={
-            isSpeakerOn ? "Turn off the speaker" : "Turn on the speaker"
-          }
-        >
-          {isSpeakerOn ? (
-            <SpeakerLoudIcon className="size-8" />
-          ) : (
-            <SpeakerOffIcon className="size-8" />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              setIsSpeakerOf((prevIsSpeakerOn) => !prevIsSpeakerOn)
+            }
+            aria-label={
+              isSpeakerOn ? "Turn off the speaker" : "Turn on the speaker"
+            }
+            className="border-black border rounded-full size-10 grid place-items-center"
+          >
+            {isSpeakerOn ? (
+              <SpeakerLoudIcon className="size-4" />
+            ) : (
+              <SpeakerOffIcon className="size-4" />
+            )}
+          </button>
+
+          {remainingSeconds !== 0 && (
+            <button
+              onClick={() => {
+                if (isTimerPaused) {
+                  requestIdRef.current = requestAnimationFrame(updateTime);
+                  setIsTimerPaused(false);
+                } else {
+                  cancelAnimationFrame(requestIdRef.current);
+                  startTimeStampRef.current = -1;
+                  startRemainingSecondsRef.current = remainingSeconds;
+                  setIsTimerPaused(true);
+                }
+              }}
+              type="button"
+              className="border-black border rounded-full size-10 grid place-items-center"
+            >
+              {isTimerPaused ? (
+                <PlayIcon className="size-4" />
+              ) : (
+                <PauseIcon className="size-4" />
+              )}
+            </button>
           )}
-        </button>
+        </div>
       </div>
     </div>
   );
