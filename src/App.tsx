@@ -14,15 +14,15 @@ function App() {
     current: new Audio("/default-alarm.mp3"),
   }));
   const svgElementRef = useRef<SVGSVGElement>(null);
-  const [isSpeakerOn, setIsSpeakerOf] = useState(true);
+  const [isSpeakerActive, setIsSpeakerActive] = useState(true);
   const startTimeStampRef = useRef(-1);
   const startRemainingSecondsRef = useRef(-1);
-  const [isTimerPaused, setIsTimerPaused] = useState(false);
+  const [isTimerActive, setIsTimerActive] = useState(true);
 
   useEffect(() => {
     const audioElement = audioRef.current;
-    audioElement.volume = isSpeakerOn ? 1 : 0;
-  }, [isSpeakerOn, audioRef]);
+    audioElement.volume = isSpeakerActive ? 1 : 0;
+  }, [isSpeakerActive, audioRef]);
 
   const updateTime = useCallback(
     (timestamp: number) => {
@@ -121,7 +121,7 @@ function App() {
       window.removeEventListener("mousemove", changeTimerDuration);
       window.removeEventListener("touchmove", changeTimerDuration);
     };
-  }, [isSpeakerOn, audioRef, updateTime]);
+  }, [isSpeakerActive, audioRef, updateTime]);
 
   useEffect(() => {
     function endChangingTimerDuration() {
@@ -149,14 +149,14 @@ function App() {
           <button
             type="button"
             onClick={() =>
-              setIsSpeakerOf((prevIsSpeakerOn) => !prevIsSpeakerOn)
+              setIsSpeakerActive((prevIsSpeakerOn) => !prevIsSpeakerOn)
             }
             aria-label={
-              isSpeakerOn ? "Turn off the speaker" : "Turn on the speaker"
+              isSpeakerActive ? "Turn off the speaker" : "Turn on the speaker"
             }
             className="border-black border rounded-full size-10 grid place-items-center"
           >
-            {isSpeakerOn ? (
+            {isSpeakerActive ? (
               <SpeakerLoudIcon className="size-4" />
             ) : (
               <SpeakerOffIcon className="size-4" />
@@ -166,23 +166,23 @@ function App() {
           {remainingSeconds !== 0 && (
             <button
               onClick={() => {
-                if (isTimerPaused) {
-                  requestIdRef.current = requestAnimationFrame(updateTime);
-                  setIsTimerPaused(false);
-                } else {
+                if (isTimerActive) {
                   cancelAnimationFrame(requestIdRef.current);
                   startTimeStampRef.current = -1;
                   startRemainingSecondsRef.current = remainingSeconds;
-                  setIsTimerPaused(true);
+                  setIsTimerActive(true);
+                } else {
+                  requestIdRef.current = requestAnimationFrame(updateTime);
+                  setIsTimerActive(false);
                 }
               }}
               type="button"
               className="border-black border rounded-full size-10 grid place-items-center"
             >
-              {isTimerPaused ? (
-                <PlayIcon className="size-4" />
-              ) : (
+              {isTimerActive ? (
                 <PauseIcon className="size-4" />
+              ) : (
+                <PlayIcon className="size-4" />
               )}
             </button>
           )}
