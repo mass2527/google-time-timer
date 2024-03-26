@@ -7,7 +7,7 @@ function App() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const requestIdRef = useRef(-1);
   const isChangingTimerDurationRef = useRef(false);
-  const prevAngleInDegrees = useRef<number>();
+  const prevAngleInDegreesRef = useRef<number>();
   const [audioRef] = useState(() => ({
     current: new Audio("/default-alarm.mp3"),
   }));
@@ -26,7 +26,6 @@ function App() {
       if (startTimeStampRef.current === -1) {
         startTimeStampRef.current = timestamp;
       }
-
       const elapsedSeconds = (timestamp - startTimeStampRef.current) / 1000;
       const nextRemainMinutes =
         startRemainingSecondsRef.current - elapsedSeconds;
@@ -46,71 +45,71 @@ function App() {
 
   useEffect(() => {
     function changeTimerDuration(event: MouseEvent | TouchEvent) {
-      if (isChangingTimerDurationRef.current) {
-        const svgElement = svgElementRef.current;
-        if (!svgElement) {
-          throw new Error(
-            "Please check if svgElementRef is correctly attached to the dom"
-          );
-        }
-
-        const coords =
-          event instanceof TouchEvent
-            ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
-            : { x: event.clientX, y: event.clientY };
-        const rect = svgElement.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const x = coords.x - centerX;
-        const y = centerY - coords.y;
-        // To set the positive y-axis as 0 degrees, I subtracted π / 2.
-        const angleInRadians = Math.atan2(y, x) - Math.PI / 2;
-
-        const angleInDegrees = (angleInRadians * 180) / Math.PI;
-        const normalizedAngleInDegrees =
-          angleInDegrees >= 0 ? angleInDegrees : angleInDegrees + 360;
-
-        const nextRemainingSeconds = Math.round(
-          3600 * (normalizedAngleInDegrees / 360)
-        );
-        if (requestIdRef.current !== -1) {
-          cancelAnimationFrame(requestIdRef.current);
-        }
-
-        requestIdRef.current = requestAnimationFrame(updateTime);
-
-        if (
-          typeof prevAngleInDegrees.current !== "undefined" &&
-          prevAngleInDegrees.current >= 0 &&
-          prevAngleInDegrees.current < 90 &&
-          angleInDegrees < 0 &&
-          angleInDegrees > -90
-        ) {
-          setRemainingSeconds(0);
-          startRemainingSecondsRef.current = -1;
-          isChangingTimerDurationRef.current = false;
-          cancelAnimationFrame(requestIdRef.current);
-          return;
-        }
-
-        if (
-          typeof prevAngleInDegrees.current !== "undefined" &&
-          prevAngleInDegrees.current < 0 &&
-          prevAngleInDegrees.current > -90 &&
-          angleInDegrees >= 0 &&
-          angleInDegrees < 90
-        ) {
-          setRemainingSeconds(3600);
-          startRemainingSecondsRef.current = 3600;
-          isChangingTimerDurationRef.current = false;
-          return;
-        }
-
-        prevAngleInDegrees.current = angleInDegrees;
-        setRemainingSeconds(nextRemainingSeconds);
-        startRemainingSecondsRef.current = nextRemainingSeconds;
+      if (!isChangingTimerDurationRef.current) {
+        return;
       }
+
+      const svgElement = svgElementRef.current;
+      if (!svgElement) {
+        throw new Error("svgElementRef is not connected");
+      }
+
+      if (requestIdRef.current !== -1) {
+        cancelAnimationFrame(requestIdRef.current);
+      }
+      requestIdRef.current = requestAnimationFrame(updateTime);
+
+      const coords =
+        event instanceof TouchEvent
+          ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
+          : { x: event.clientX, y: event.clientY };
+      const rect = svgElement.getBoundingClientRect();
+      const centerCoords = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+      const dx = coords.x - centerCoords.x;
+      const dy = centerCoords.y - coords.y;
+      // To set the positive y-axis as 0 degrees, I subtracted π / 2.
+      const angleInRadians = Math.atan2(dy, dx) - Math.PI / 2;
+      const angleInDegrees = (angleInRadians * 180) / Math.PI;
+      const hasReachedMinAngle =
+        typeof prevAngleInDegreesRef.current !== "undefined" &&
+        prevAngleInDegreesRef.current >= 0 &&
+        prevAngleInDegreesRef.current < 90 &&
+        angleInDegrees < 0 &&
+        angleInDegrees > -90;
+      if (hasReachedMinAngle) {
+        setRemainingSeconds(0);
+        startRemainingSecondsRef.current = -1;
+        isChangingTimerDurationRef.current = false;
+        cancelAnimationFrame(requestIdRef.current);
+        return;
+      }
+
+      const hasReachedMaxAngle =
+        typeof prevAngleInDegreesRef.current !== "undefined" &&
+        prevAngleInDegreesRef.current < 0 &&
+        prevAngleInDegreesRef.current > -90 &&
+        angleInDegrees >= 0 &&
+        angleInDegrees < 90;
+      if (hasReachedMaxAngle) {
+        setRemainingSeconds(3600);
+        startRemainingSecondsRef.current = 3600;
+        isChangingTimerDurationRef.current = false;
+        return;
+      }
+
+      const normalizedAngleInDegrees =
+        angleInDegrees >= 0 ? angleInDegrees : angleInDegrees + 360;
+      const nextRemainingSeconds = Math.round(
+        3600 * (normalizedAngleInDegrees / 360)
+      );
+      prevAngleInDegreesRef.current = angleInDegrees;
+      setRemainingSeconds(nextRemainingSeconds);
+      startRemainingSecondsRef.current = nextRemainingSeconds;
     }
+
     window.addEventListener("mousemove", changeTimerDuration);
     window.addEventListener("touchmove", changeTimerDuration);
     return () => {
