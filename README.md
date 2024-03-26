@@ -1,5 +1,7 @@
 # Google Time Timer
 
+![test](./public/time-timer.svg)
+
 **How to Use:**
 
 1. **Setting the Timer:**
