@@ -15,7 +15,6 @@ function App() {
   const [isSpeakerActive, setIsSpeakerActive] = useState(true);
   const startTimeStampRef = useRef(-1);
   const startRemainingSecondsRef = useRef(-1);
-  const [isTimerActive, setIsTimerActive] = useState(true);
 
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -142,50 +141,21 @@ function App() {
           onTouchStart={() => (isChangingTimerDurationRef.current = true)}
         />
 
-        <div className="flex flex-col gap-4 items-center">
-          <button
-            type="button"
-            onClick={() =>
-              setIsSpeakerActive((prevIsSpeakerOn) => !prevIsSpeakerOn)
-            }
-            aria-label={
-              isSpeakerActive ? "Turn off the speaker" : "Turn on the speaker"
-            }
-          >
-            {isSpeakerActive ? (
-              <SpeakerLoudIcon className="size-6" />
-            ) : (
-              <SpeakerOffIcon className="size-6" />
-            )}
-          </button>
-
-          <button
-            onClick={() => {
-              if (isTimerActive) {
-                cancelAnimationFrame(requestIdRef.current);
-                startTimeStampRef.current = -1;
-                startRemainingSecondsRef.current = remainingSeconds;
-                setIsTimerActive(false);
-                alert(
-                  "Timer Paused: The countdown has been paused. Click 'Resume' to continue."
-                );
-              } else {
-                requestIdRef.current = requestAnimationFrame(updateTime);
-                setIsTimerActive(true);
-                alert(
-                  "Timer Resumed: The countdown has been resumed. Time is ticking!"
-                );
-              }
-            }}
-            type="button"
-            style={{
-              opacity: remainingSeconds === 0 ? 0 : 1,
-            }}
-            className={`${remainingSeconds === 0 ? "invisible" : ""}`}
-          >
-            {isTimerActive ? "Pause" : "Resume"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() =>
+            setIsSpeakerActive((prevIsSpeakerOn) => !prevIsSpeakerOn)
+          }
+          aria-label={
+            isSpeakerActive ? "Turn off the speaker" : "Turn on the speaker"
+          }
+        >
+          {isSpeakerActive ? (
+            <SpeakerLoudIcon className="size-6" />
+          ) : (
+            <SpeakerOffIcon className="size-6" />
+          )}
+        </button>
       </div>
     </div>
   );
