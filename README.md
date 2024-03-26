@@ -1,4 +1,4 @@
-# Google time timer
+# Google Time Timer
 
 **How to Use:**
 
