@@ -30,7 +30,6 @@ function App() {
       const nextRemainMinutes =
         startRemainingSecondsRef.current - elapsedSeconds;
       if (nextRemainMinutes <= 0) {
-        audioRef.current.play();
         cancelAnimationFrame(requestIdRef.current);
         startTimeStampRef.current = -1;
         setRemainingSeconds(0);
@@ -40,6 +39,18 @@ function App() {
       setRemainingSeconds(nextRemainMinutes);
       requestIdRef.current = requestAnimationFrame(updateTime);
     }
+
+    // With the help of a web worker, the timer can function correctly even in an inactive tab
+    const worker = new Worker("src/workers/setTimeout.ts");
+    worker.onmessage = (event) => {
+      const elapsedTimeInMs = event.data;
+      const isTimerExpired =
+        startRemainingSecondsRef.current - elapsedTimeInMs / 1000 === 0;
+      if (isTimerExpired) {
+        worker.postMessage({ type: "clear" });
+        audioRef.current.play();
+      }
+    };
 
     function changeTimerDuration(event: MouseEvent | TouchEvent) {
       if (!isChangingTimerDurationRef.current) {
@@ -54,6 +65,7 @@ function App() {
       if (requestIdRef.current !== -1) {
         cancelAnimationFrame(requestIdRef.current);
       }
+      worker.postMessage({ type: "clear" });
       requestIdRef.current = requestAnimationFrame(updateTime);
 
       const coords =
@@ -81,6 +93,7 @@ function App() {
         startRemainingSecondsRef.current = -1;
         isChangingTimerDurationRef.current = false;
         cancelAnimationFrame(requestIdRef.current);
+        worker.postMessage({ type: "clear" });
         return;
       }
 
@@ -94,6 +107,7 @@ function App() {
         setRemainingSeconds(3600);
         startRemainingSecondsRef.current = 3600;
         isChangingTimerDurationRef.current = false;
+        worker.postMessage({ type: "start", timeout: 1000 });
         return;
       }
 
@@ -105,6 +119,7 @@ function App() {
       prevAngleInDegreesRef.current = angleInDegrees;
       setRemainingSeconds(nextRemainingSeconds);
       startRemainingSecondsRef.current = nextRemainingSeconds;
+      worker.postMessage({ type: "start", timeout: 1000 });
     }
 
     window.addEventListener("mousemove", changeTimerDuration);
