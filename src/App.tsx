@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CountDownTimer from "./CountDownTimer";
 import SpeakerLoudIcon from "./SpeakerLoudIcon";
 import SpeakerOffIcon from "./SpeakerOffIcon";
@@ -21,8 +21,8 @@ function App() {
     audioElement.volume = isSpeakerActive ? 1 : 0;
   }, [isSpeakerActive, audioRef]);
 
-  const updateTime = useCallback(
-    (timestamp: number) => {
+  useEffect(() => {
+    function updateTime(timestamp: number) {
       if (startTimeStampRef.current === -1) {
         startTimeStampRef.current = timestamp;
       }
@@ -39,11 +39,8 @@ function App() {
 
       setRemainingSeconds(nextRemainMinutes);
       requestIdRef.current = requestAnimationFrame(updateTime);
-    },
-    [audioRef]
-  );
+    }
 
-  useEffect(() => {
     function changeTimerDuration(event: MouseEvent | TouchEvent) {
       if (!isChangingTimerDurationRef.current) {
         return;
@@ -116,7 +113,7 @@ function App() {
       window.removeEventListener("mousemove", changeTimerDuration);
       window.removeEventListener("touchmove", changeTimerDuration);
     };
-  }, [isSpeakerActive, audioRef, updateTime]);
+  }, [isSpeakerActive, audioRef]);
 
   useEffect(() => {
     function endChangingTimerDuration() {
